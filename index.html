@@ -98,7 +98,7 @@
   .apply-card>p{font-size:14px;color:rgba(21,18,12,0.6);margin:0 0 26px;}
   .field{margin-bottom:16px;}
   .field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;}
-  .field input{width:100%;padding:12px 14px;border-radius:9px;border:1.5px solid var(--line);font-family:'Space Grotesk',sans-serif;font-size:14.5px;background:var(--cream);}
+  .field input{width:100%;padding:12px 14px;border-radius:99px;border:1.5px solid var(--line);font-family:'Space Grotesk',sans-serif;font-size:14.5px;background:var(--cream);}
   .field input:focus{outline:none;border-color:var(--navy);}
   .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   .check-row{display:flex;align-items:flex-start;gap:10px;margin:20px 0 24px;}
@@ -165,7 +165,7 @@
       
       <div class="city-download">
         <div class="sample-frame">
-          <video id="cityVideo" class="sample-video" controls playsinline preload="auto" crossorigin="anonymous">
+          <video id="cityVideo" class="sample-video" controls playsinline preload="metadata">
             <source id="cityVideoSource" src="" type="video/mp4">
             Your browser does not support the video tag.
           </video>
@@ -262,7 +262,7 @@
 </footer>
 
 <script>
-  // Direct Archive.org hosted video files mapping
+  // Archive.org hosted video files mapping
   const cityReels = {
     'bangalore': 'https://archive.org/download/rapido_tenkasi_7s_v1/rapido_bengaluru_7s_v1.mp4',
     'bengaluru': 'https://archive.org/download/rapido_tenkasi_7s_v1/rapido_bengaluru_7s_v1.mp4',
@@ -287,7 +287,7 @@
 
     if (!city) return 'bangalore';
 
-    // Normalizes input string (lowercases & strips whitespace/special chars)
+    // Normalizes input string
     city = decodeURIComponent(city).toLowerCase().replace(/[^a-z0-9]/g, '').trim();
 
     if (city === '' || city === 'null' || city.includes('@') || city.includes('{')) {
@@ -299,19 +299,21 @@
 
   function setupCityReel() {
     const city = getCityFromURL();
-    const videoSrc = cityReels[city] || cityReels['default'];
-    
+    const downloadSrc = cityReels[city] || cityReels['default'];
+
     const videoElement = document.getElementById('cityVideo');
     const videoSource = document.getElementById('cityVideoSource');
     const downloadBtn = document.getElementById('downloadBtn');
 
     if (videoSource && videoElement) {
-      videoSource.src = videoSrc;
+      // Stripping crossorigin attribute allows cross-domain browser video streaming
+      videoElement.removeAttribute('crossorigin');
+      videoSource.src = downloadSrc;
       videoElement.load();
     }
 
     if (downloadBtn) {
-      downloadBtn.href = videoSrc;
+      downloadBtn.href = downloadSrc;
       downloadBtn.setAttribute('download', `${city}-rapido-reel.mp4`);
     }
   }
