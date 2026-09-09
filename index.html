@@ -107,7 +107,7 @@
   .error-msg{font-size:12.5px;color:var(--signal);margin-top:10px;display:none;}
   .submit-btn{width:100%;justify-content:center;padding:15px;font-size:15px;}
   .success-view{display:none;text-align:center;}
-  .success-view .ref{font-family:'JetBrains Mono',monospace;font-size:20px;background:var(--yellow);display:inline-block;padding:8px 18px;border-radius:8px;margin:12px 0 16px;}
+  .success-view h3{font-size:24px;color:var(--go);margin-bottom:12px;}
   .success-view p{font-size:14px;color:rgba(21,18,12,0.65);max-width:440px;margin:0 auto;}
 
   footer{background:var(--navy);color:rgba(255,248,234,0.5);padding:28px 24px;font-size:12.5px;text-align:center;}
@@ -246,9 +246,7 @@
 
         <div id="successView" class="success-view">
           <h3>Submission Successful!</h3>
-          <p>Your entry has been recorded. Your reference code is:</p>
-          <div id="refCode" class="ref">RCS-000000</div>
-          <p>Keep this code safe for tracking your reward status.</p>
+          <p>Your entry has been recorded in our system. We will verify your submission shortly.</p>
         </div>
       </div>
     </div>
@@ -287,7 +285,6 @@
 
     if (!city) return 'bangalore';
 
-    // Normalizes input string
     city = decodeURIComponent(city).toLowerCase().replace(/[^a-z0-9]/g, '').trim();
 
     if (city === '' || city === 'null' || city.includes('@') || city.includes('{')) {
@@ -306,7 +303,6 @@
     const downloadBtn = document.getElementById('downloadBtn');
 
     if (videoSource && videoElement) {
-      // Stripping crossorigin attribute allows cross-domain browser video streaming
       videoElement.removeAttribute('crossorigin');
       videoSource.src = downloadSrc;
       videoElement.load();
@@ -323,11 +319,14 @@
 
     const form = document.getElementById('entryForm');
     const successView = document.getElementById('successView');
-    const refCodeElement = document.getElementById('refCode');
     const errorMsg = document.getElementById('errorMsg');
+    const submitBtn = form ? form.querySelector('.submit-btn') : null;
+
+    // Configured Google Sheet Web App URL
+    const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwXuEap4fwQuH7gOxzciBW3PLdw-X5prnZXC3TJgDTOt3jVEDnQBzoNLbnsJaTwGjk/exec';
 
     if (form) {
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
         errorMsg.style.display = 'none';
 
@@ -342,11 +341,41 @@
           return;
         }
 
-        const randomRef = 'RCS-' + Math.floor(100000 + Math.random() * 900000);
-        refCodeElement.textContent = randomRef;
+        const city = getCityFromURL();
 
-        form.style.display = 'none';
-        successView.style.display = 'block';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Submitting...';
+        }
+
+        const payload = {
+          fullName,
+          phoneNumber,
+          instaHandle,
+          reelLink,
+          city
+        };
+
+        try {
+          await fetch(GOOGLE_SHEET_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          form.style.display = 'none';
+          successView.style.display = 'block';
+
+        } catch (error) {
+          console.error('Submission error:', error);
+          errorMsg.textContent = 'Network error. Please try again.';
+          errorMsg.style.display = 'block';
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Entry';
+          }
+        }
       });
     }
   });
